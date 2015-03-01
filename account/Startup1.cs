@@ -5,9 +5,9 @@ using Owin;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.AspNet.Identity;
 
-[assembly: OwinStartup(typeof(WebApplication1.Startup1))]
+[assembly: OwinStartup(typeof(account.Startup1))]
 
-namespace WebApplication1
+namespace account
 {
     public class Startup1
     {
