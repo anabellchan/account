@@ -8,9 +8,11 @@ using System.Net;
 using System.Security.Claims;
 using System.Web;
 using System.Web.Mvc;
-using account.ViewModel;
 using Microsoft.Owin.Security.DataProtection;
 using Microsoft.AspNet.Identity.Owin;
+using account.BusinessLogic;
+using account.ViewModels;
+using account.ViewModel;
 
 namespace account.Controllers
 {
@@ -30,7 +32,7 @@ namespace account.Controllers
         {
             return View();
         }
-        [HttpPost]
+        [HttpPost]            
         public ActionResult Index(Login login)
         {
             // UserStore and UserManager manages data retreival.
@@ -92,13 +94,23 @@ namespace account.Controllers
                 CreateTokenProvider(manager, EMAIL_CONFIRMATION);
 
                 var code = manager.GenerateEmailConfirmationToken(identityUser.Id);
-                var callbackUrl = Url.Action("ConfirmEmail", "Home",
-                                                new { userId = identityUser.Id, code = code },
-                                                    protocol: Request.Url.Scheme);
+                var callbackUrl = Url.Action("ConfirmEmail", "Home", new { userId = identityUser.Id, code = code }, protocol: Request.Url.Scheme);
 
-                string email = "Please confirm your account by clicking this link: <a href=\""
-                                + callbackUrl + "\">Confirm Registration</a>";
-                ViewBag.FakeConfirmation = email;
+                MailHelper mailer = new MailHelper("anabellchan@gmail.com", "Account Confirmation", "Please confirm your account by clicking this link: <a href=\"" + callbackUrl + "\">Confirm Registration</a>");
+
+                bool response = mailer.EmailFromArvixe();
+                const string SUCCESS = "Please check your email to confirm registration.";
+                const string FAIL = "Failure sending email.";
+
+                if (response)
+                    ViewBag.Response = SUCCESS;
+                else
+                    ViewBag.Response = FAIL;
+
+                ViewBag.Display = "style='Display:none'";
+                //string email = "Please confirm your account by clicking this link: <a href=\""
+                //                + callbackUrl + "\">Confirm Registration</a>";
+                //ViewBag.FakeConfirmation = email;
 
             }
             return View();
@@ -175,6 +187,74 @@ namespace account.Controllers
             }
             return View();
         }
+        [HttpGet]
+        public ActionResult ForgotPassword()
+        {
+            ViewBag.Display = "";
+            return View();
+        }
+        [HttpPost]
+        public ActionResult ForgotPassword(string email)
+        {
+            var userStore = new UserStore<IdentityUser>();
+            UserManager<IdentityUser> manager = new UserManager<IdentityUser>(userStore);
+            var user = manager.FindByEmail(email);
+            CreateTokenProvider(manager, PASSWORD_RESET);
+
+            if (user != null)
+            {
+                var code = manager.GeneratePasswordResetToken(user.Id);
+                var callbackUrl = Url.Action("ResetPassword", "Home", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                
+                MailHelper mailer = new MailHelper("anabellchan@gmail.com", "Reset Password", "Please reset yor password by clicking here: <a href=\"" + callbackUrl + "\">link</a>");
+
+                bool response = mailer.EmailFromArvixe();
+                const string SUCCESS = "Please check your email to reset password.";
+                const string FAIL = "Failure sending email.";
+
+
+                if (response)
+                    ViewBag.Response = SUCCESS;
+                else
+                    ViewBag.Response = FAIL;
+
+                ViewBag.Display = "style='Display:none'";
+                return View();
+            }
+            else
+            {
+                // do not reveal that user does not exist. 
+                return RedirectToAction("ForgotPassword");  
+            } 
+        }
+
+        [HttpGet]
+        public ActionResult ResetPassword(string userID, string code)
+        {
+            ViewBag.PasswordToken = code;
+            ViewBag.UserID = userID;
+            ViewBag.Result = "";
+            return View();
+        }
+        [HttpPost]
+        public ActionResult ResetPassword(string password, string confirmPassword,
+                                          string passwordToken, string userID)
+        {
+
+
+            var userStore = new UserStore<IdentityUser>();
+            UserManager<IdentityUser> manager = new UserManager<IdentityUser>(userStore);
+            var user = manager.FindById(userID);
+            CreateTokenProvider(manager, PASSWORD_RESET);
+
+            IdentityResult result = manager.ResetPassword(userID, passwordToken, password);
+            if (result.Succeeded)
+                ViewBag.Result = "The password has been reset.";
+            else
+                ViewBag.Result = "The password has not been reset.";
+            return View();
+        }
+
 
 
 
