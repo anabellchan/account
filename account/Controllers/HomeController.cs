@@ -22,7 +22,7 @@ namespace account.Controllers
         const string PASSWORD_RESET = "ResetPassword";
         void CreateTokenProvider(UserManager<IdentityUser> manager, string tokenType)
         {
-            var provider = new DpapiDataProtectionProvider("MyApplicaitonName");
+            var provider = new DpapiDataProtectionProvider("CompSci Elites");
             manager.UserTokenProvider = new DataProtectorTokenProvider<IdentityUser>(
             provider.Create(tokenType));
         }
