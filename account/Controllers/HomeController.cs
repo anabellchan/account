@@ -96,9 +96,9 @@ namespace account.Controllers
                                                 new { userId = identityUser.Id, code = code },
                                                     protocol: Request.Url.Scheme);
 
-                string email = "Please confirm your account by clicking this link: <a href=\""
+                string email = "Please confirm your account by clicking on this link: <a href=\""
                                 + callbackUrl + "\">Confirm Registration</a>";
-                ViewBag.FakeConfirmation = email;
+                ViewBag.Confirmation = email;
 
             }
             return View();
